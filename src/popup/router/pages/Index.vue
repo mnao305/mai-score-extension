@@ -18,69 +18,55 @@ export default {
   },
   methods: {
     async getData() {
-      const difficultyLevel = ['basic', 'advanced', 'expert', 'master', 'remaster']
-      let scoreData = {}
-      let scoreDataDX = {}
+      const difficultyLevel = ['Basic', 'Advanced', 'Expert', 'Master', 'ReMaster']
+      let scoreData = []
       for (let i = 0; i < difficultyLevel.length; i++) {
+        scoreData[difficultyLevel[i]] = {}
         this.message = `${difficultyLevel[i]}データを読み込み中...`
         try {
           const { data } = await Axios.get(`https://maimaidx.jp/maimai-mobile/record/musicGenre/search/?genre=99&diff=${i}`)
           const tmpEl = document.createElement('div')
           tmpEl.innerHTML = data
-          const classList = tmpEl.getElementsByClassName('w_450 m_15 p_r f_0')
+          const classList = tmpEl.getElementsByClassName('main_wrapper')[0].children
 
-          let scoreList = {}
-          let scoreListDX = {}
-          for (let i = 0; i < classList.length; i++) {
-            const tmp = classList[i].innerText
+          let genre = ''
+          for (let j = 0; j < classList.length; j++) {
+            if (classList[j].className.indexOf('screw_block') >= 0) {
+              genre = classList[j].innerText
+              continue
+            } else if (classList[j].className.indexOf('w_450') === -1) {
+              continue
+            }
+            const tmp = classList[j].innerText
               .trim()
               .split('\n')
               .map(v => v.trim())
 
-            if (classList[i].lastElementChild.src.indexOf('standard.png') >= 0) {
-              scoreList[tmp[1]] = {
-                title: tmp[1],
-                achievement: tmp[2] ? tmp[2] : null,
-                dxScore: tmp[3] ? tmp[3] : null,
-                type: 'standard',
-              }
-            } else {
-              scoreListDX[tmp[1]] = {
-                title: tmp[1],
-                achievement: tmp[2] ? tmp[2] : null,
-                dxScore: tmp[3] ? tmp[3] : null,
-                type: 'deluxe',
-              }
+            const type = classList[j].lastElementChild.src.indexOf('standard.png') >= 0 ? 'standard' : 'deluxe'
+            scoreData[difficultyLevel[i]][`${tmp[1]}_${difficultyLevel[i]}_${type}`] = {
+              title: tmp[1],
+              achievement: tmp[2] ? Number(tmp[2].replace('%', '')) : null,
+              dxScore: tmp[3] ? Number(tmp[3].replace(',', '')) : null,
+              type: type,
+              genre: genre,
+              difficultyLevel: difficultyLevel[i],
+              level: tmp[0].indexOf('+') >= 0 ? Number(tmp[0].replace('+', '')) + 0.5 : Number(tmp[0].replace('+', '')),
             }
           }
-          scoreData[difficultyLevel[i]] = scoreList
-          scoreDataDX[difficultyLevel[i]] = scoreListDX
         } catch (error) {
           console.error(error)
           continue
         }
       }
       console.log(scoreData)
-      console.log(scoreDataDX)
       this.message = 'データ保存中...'
+
       for (let i = 0; i < difficultyLevel.length; i++) {
         db.collection('users')
           .doc('l6aWFHMbrNhDnvLsHsrH')
           .collection('scores')
-          .doc(Object.keys(scoreData)[i])
-          .collection('standard')
-          .doc('list')
-          .set(scoreData[Object.keys(scoreData)[i]], { merge: true })
-          .catch(e => {
-            console.error(e)
-          })
-        db.collection('users')
-          .doc('l6aWFHMbrNhDnvLsHsrH')
-          .collection('scores')
-          .doc(Object.keys(scoreDataDX)[i])
-          .collection('deluxe')
-          .doc('list')
-          .set(scoreDataDX[Object.keys(scoreDataDX)[i]], { merge: true })
+          .doc(difficultyLevel[i])
+          .set(scoreData[difficultyLevel[i]])
           .catch(e => {
             console.error(e)
           })
