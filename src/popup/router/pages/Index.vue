@@ -18,6 +18,7 @@ export default {
   },
   methods: {
     async getData() {
+      this.message = 'データ取得準備中...'
       const date = Date.now()
       const difficultyLevel = ['Basic', 'Advanced', 'Expert', 'Master', 'ReMaster']
       let scoreData = []
