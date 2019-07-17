@@ -22,6 +22,16 @@ export default {
       const difficultyLevel = ['Basic', 'Advanced', 'Expert', 'Master', 'ReMaster']
       let scoreData = []
       for (let i = 0; i < difficultyLevel.length; i++) {
+        const docs = await db
+          .collection('users')
+          .doc('l6aWFHMbrNhDnvLsHsrH')
+          .collection('scores')
+          .doc(difficultyLevel[i])
+          .get()
+        let gotOldScore
+        if (docs && docs.exists) {
+          gotOldScore = docs.data()
+        }
         scoreData[difficultyLevel[i]] = {}
         this.message = `${difficultyLevel[i]}データを読み込み中...`
         try {
@@ -92,10 +102,21 @@ export default {
             }
 
             const type = classList[j].lastElementChild.src.indexOf('standard.png') >= 0 ? 'standard' : 'deluxe'
+            const oldAchievement = gotOldScore[`${tmp[1]}_${difficultyLevel[i]}_${type}`].achievement || []
+            const oldDxScore = gotOldScore[`${tmp[1]}_${difficultyLevel[i]}_${type}`].dxScore || []
+            if ((oldAchievement.length >= 1 && oldAchievement[oldAchievement.length - 1].score !== Number(tmp[2].replace('%', ''))) || (oldAchievement.length === 0 && tmp[2])) {
+              oldAchievement.push({ score: Number(tmp[2].replace('%', '')), date: date })
+            }
+            if ((oldDxScore.length >= 1 && oldDxScore[oldDxScore.length - 1].score !== Number(tmp[3].replace(',', ''))) || (oldDxScore.length === 0 && tmp[3])) {
+              oldDxScore.push({ score: Number(tmp[3].replace(',', '')), date: date })
+            }
+
+            const achievement = tmp[2] ? oldAchievement : null
+            const dxScore = tmp[3] ? oldDxScore : null
             scoreData[difficultyLevel[i]][`${tmp[1]}_${difficultyLevel[i]}_${type}`] = {
               title: tmp[1],
-              achievement: tmp[2] ? [{ score: Number(tmp[2].replace('%', '')), date: date }] : null,
-              dxScore: tmp[3] ? [{ score: Number(tmp[3].replace(',', '')), date: date }] : null,
+              achievement: achievement,
+              dxScore: dxScore,
               type: type,
               genre: genre,
               difficultyLevel: difficultyLevel[i],
