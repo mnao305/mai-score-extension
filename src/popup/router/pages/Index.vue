@@ -103,8 +103,12 @@ export default {
             }
 
             const type = classList[j].lastElementChild.src.indexOf('standard.png') >= 0 ? 'standard' : 'deluxe'
-            const oldAchievement = gotOldScore[`${tmp[1]}_${difficultyLevel[i]}_${type}`].achievement || []
-            const oldDxScore = gotOldScore[`${tmp[1]}_${difficultyLevel[i]}_${type}`].dxScore || []
+            let oldAchievement = []
+            let oldDxScore = []
+            if (gotOldScore[`${tmp[1]}_${difficultyLevel[i]}_${type}`]) {
+              oldAchievement = gotOldScore[`${tmp[1]}_${difficultyLevel[i]}_${type}`].achievement || []
+              oldDxScore = gotOldScore[`${tmp[1]}_${difficultyLevel[i]}_${type}`].dxScore || []
+            }
             if ((oldAchievement.length >= 1 && oldAchievement[oldAchievement.length - 1].score !== Number(tmp[2].replace('%', ''))) || (oldAchievement.length === 0 && tmp[2])) {
               oldAchievement.push({ score: Number(tmp[2].replace('%', '')), date: date })
             }
