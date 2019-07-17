@@ -18,6 +18,7 @@ export default {
   },
   methods: {
     async getData() {
+      const date = Date.now()
       const difficultyLevel = ['Basic', 'Advanced', 'Expert', 'Master', 'ReMaster']
       let scoreData = []
       for (let i = 0; i < difficultyLevel.length; i++) {
@@ -93,8 +94,8 @@ export default {
             const type = classList[j].lastElementChild.src.indexOf('standard.png') >= 0 ? 'standard' : 'deluxe'
             scoreData[difficultyLevel[i]][`${tmp[1]}_${difficultyLevel[i]}_${type}`] = {
               title: tmp[1],
-              achievement: tmp[2] ? Number(tmp[2].replace('%', '')) : null,
-              dxScore: tmp[3] ? Number(tmp[3].replace(',', '')) : null,
+              achievement: tmp[2] ? [{ score: Number(tmp[2].replace('%', '')), date: date }] : null,
+              dxScore: tmp[3] ? [{ score: Number(tmp[3].replace(',', '')), date: date }] : null,
               type: type,
               genre: genre,
               difficultyLevel: difficultyLevel[i],
