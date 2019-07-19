@@ -82,7 +82,9 @@ const config = {
           jsonContent.version = version
 
           if (config.mode === 'development') {
-            jsonContent['content_security_policy'] = "script-src 'self' 'unsafe-eval'; object-src 'self'"
+            const tmp = jsonContent['content_security_policy']
+            const i = tmp.indexOf(';')
+            jsonContent['content_security_policy'] = `${tmp.slice(0, i)} 'unsafe-eval'${tmp.slice(i, tmp.length)}`
           }
 
           return JSON.stringify(jsonContent, null, 2)

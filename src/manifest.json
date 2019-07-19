@@ -22,5 +22,7 @@
   },
   "permissions": [
     "https://maimaidx.jp/*"
-  ]
+  ],
+  "content_security_policy": "script-src 'self' https://apis.google.com; object-src 'self'"
+
 }
