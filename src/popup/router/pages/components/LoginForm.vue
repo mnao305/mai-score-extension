@@ -1,0 +1,49 @@
+<template>
+  <div id="loginForm">
+    <button @click="twitterLogin">Twitterログイン</button>
+    <p class="errorMessage">{{ errorMessage }}</p>
+  </div>
+</template>
+
+<script>
+import auth from '../../../plugins/auth'
+import { db } from '../../../plugins/firestore'
+export default {
+  data() {
+    return {
+      errorMessage: '',
+    }
+  },
+  methods: {
+    async twitterLogin() {
+      console.log('Login!!!!')
+
+      try {
+        const data = await auth.twitterLogin()
+        const dbData = await db
+          .collection('users')
+          .doc(data.user.uid)
+          .get()
+
+        if (!dbData.exists) {
+          // DBにデータがなければ新規ユーザとしエラーを吐く
+          this.errorMessage = '先にWebページにて新規登録してください。'
+          return
+        }
+
+        location.reload()
+      } catch (error) {
+        this.errorMessage = 'ログインに失敗しました。'
+      }
+    },
+  },
+}
+</script>
+
+<style lang="scss" scoped>
+#loginForm {
+  .errorMessage {
+    color: red;
+  }
+}
+</style>
