@@ -160,6 +160,8 @@ export default {
       }
       db.collection('users')
         .doc(this.uid)
+        .collection('secure')
+        .doc(this.uid)
         .update({
           _updateAt: date,
         })
