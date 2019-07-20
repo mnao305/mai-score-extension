@@ -112,18 +112,18 @@ export default {
               oldDxScore = gotOldScore[`${tmp[1]}_${difficultyLevel[i]}_${type}`].dxScore || []
             }
             if ((oldAchievement.length >= 1 && oldAchievement[oldAchievement.length - 1].score !== Number(tmp[2].replace('%', ''))) || (oldAchievement.length === 0 && tmp[2])) {
-              oldAchievement.push({ score: Number(tmp[2].replace('%', '')), date: date })
+              oldAchievement.push({ achievement: Number(tmp[2].replace('%', '')), date: date })
             }
             if ((oldDxScore.length >= 1 && oldDxScore[oldDxScore.length - 1].score !== Number(tmp[3].replace(',', ''))) || (oldDxScore.length === 0 && tmp[3])) {
-              oldDxScore.push({ score: Number(tmp[3].replace(',', '')), date: date })
+              oldDxScore.push({ dxScore: Number(tmp[3].replace(',', '')), date: date })
             }
 
-            const achievement = tmp[2] ? oldAchievement : null
-            const dxScore = tmp[3] ? oldDxScore : null
+            const achievements = tmp[2] ? oldAchievement : null
+            const dxScores = tmp[3] ? oldDxScore : null
             scoreData[difficultyLevel[i]][`${tmp[1]}_${difficultyLevel[i]}_${type}`] = {
               title: tmp[1],
-              achievement: achievement,
-              dxScore: dxScore,
+              achievements: achievements,
+              dxScores: dxScores,
               type: type,
               genre: genre,
               difficultyLevel: difficultyLevel[i],
