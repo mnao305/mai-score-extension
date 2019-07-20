@@ -1,7 +1,7 @@
 {
   "name": "mai-score-extension",
-  "version": "1.0.0",
-  "description": "舞スコアログに登録するためのブラウザ拡張",
+  "version": "0.1.0",
+  "description": "舞スコアに登録するためのブラウザ拡張",
   "author": "mnao305 <naomasa305@gmail.com>",
   "scripts": {
     "lint": "eslint --ext .js,.vue src",
