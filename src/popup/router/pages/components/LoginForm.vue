@@ -28,6 +28,7 @@ export default {
         if (!dbData.exists) {
           // DBにデータがなければ新規ユーザとしエラーを吐く
           this.errorMessage = '先にWebページにて新規登録してください。'
+          await auth.logout()
           return
         }
 
