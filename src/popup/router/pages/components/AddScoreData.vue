@@ -2,7 +2,7 @@
   <div id="addScoreData">
     <p>舞スコア データ取得ツール</p>
     <button @click="getData">データ取得</button>
-    <p v-if="message">{{ message }}</p>
+    <p v-if="message" :class="{ error: error }">{{ message }}</p>
   </div>
 </template>
 
@@ -13,6 +13,7 @@ export default {
   data() {
     return {
       message: '',
+      error: false,
     }
   },
   props: {
@@ -20,6 +21,7 @@ export default {
   },
   methods: {
     async getData() {
+      this.error = false
       this.message = 'データ取得準備中...'
       const date = Date.now()
       const difficultyLevel = ['Basic', 'Advanced', 'Expert', 'Master', 'ReMaster']
@@ -39,6 +41,11 @@ export default {
         this.message = `${difficultyLevel[i]}データを読み込み中...`
         try {
           const { data } = await Axios.get(`https://maimaidx.jp/maimai-mobile/record/musicGenre/search/?genre=99&diff=${i}`)
+          if (data.match(/ログインしてください/)) {
+            this.message = 'maimaiでらっくすNETにログインしていません。ログインしてから再度お試しください。'
+            this.error = true
+            return
+          }
           const tmpEl = document.createElement('div')
           tmpEl.innerHTML = data
           const classList = tmpEl.getElementsByClassName('main_wrapper')[0].children
@@ -161,3 +168,11 @@ export default {
   },
 }
 </script>
+
+<style lang="scss" scoped>
+#addScoreData {
+  .error {
+    color: red;
+  }
+}
+</style>
