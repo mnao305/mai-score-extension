@@ -1,6 +1,6 @@
 {
   "name": "mai-score-extension",
-  "description": "舞スコアログに登録するためのブラウザ拡張",
+  "description": "舞スコアに登録するためのブラウザ拡張",
   "version": null,
   "manifest_version": 2,
   "icons": {
