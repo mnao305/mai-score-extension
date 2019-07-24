@@ -20,7 +20,7 @@ const auth = {
   },
   // メールログイン
   mailLogin(email, passwd) {
-    return new Promise()((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       firebase
         .auth()
         .signInWithEmailAndPassword(email, passwd)
