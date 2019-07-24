@@ -1,6 +1,9 @@
 <template>
   <div id="loginForm">
-    <button @click="twitterLogin">Twitterログイン</button>
+    <button @click="twitterLogin">Twitterログイン</button><br />
+    <label>メールアドレス<br /><input type="text" name="mail" id="mail" v-model="mail"/></label><br />
+    <label>パスワード<br /><input type="password" name="passwd" id="passwd" v-model="passwd"/></label><br />
+    <button @click="mailLogin">メールログイン</button>
     <p class="errorMessage">{{ errorMessage }}</p>
   </div>
 </template>
@@ -12,6 +15,8 @@ export default {
   data() {
     return {
       errorMessage: '',
+      mail: '',
+      passwd: '',
     }
   },
   methods: {
@@ -37,6 +42,14 @@ export default {
         this.errorMessage = 'ログインに失敗しました。'
       }
     },
+    async mailLogin() {
+      try {
+        await auth.mailLogin(this.mail, this.passwd)
+        location.reload()
+      } catch (error) {
+        this.errorMessage = 'ログインに失敗しました。'
+      }
+    },
   },
 }
 </script>
@@ -45,6 +58,13 @@ export default {
 #loginForm {
   .errorMessage {
     color: red;
+  }
+  button,
+  input {
+    margin-bottom: 10px;
+  }
+  input {
+    width: 260px;
   }
 }
 </style>
