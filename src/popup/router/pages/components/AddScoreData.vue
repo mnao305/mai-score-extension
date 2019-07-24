@@ -1,5 +1,6 @@
 <template>
   <div id="addScoreData">
+    <a id="logout" href @click="logout">ログアウト</a>
     <p>舞スコア データ取得ツール</p>
     <button @click="getData">データ取得</button>
     <p v-if="message" :class="{ error: error }">{{ message }}</p>
@@ -9,6 +10,7 @@
 <script>
 import Axios from 'axios'
 import { db } from '../../../plugins/firestore'
+import auth from '../../../plugins/auth'
 export default {
   data() {
     return {
@@ -167,6 +169,10 @@ export default {
         })
       this.message = 'データ保存完了！'
     },
+    async logout() {
+      await auth.logout()
+      location.reload()
+    },
   },
 }
 </script>
@@ -175,6 +181,11 @@ export default {
 #addScoreData {
   .error {
     color: red;
+  }
+  #logout {
+    display: block;
+    text-align: right;
+    margin: 0;
   }
 }
 </style>
