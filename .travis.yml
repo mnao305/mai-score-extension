@@ -1,0 +1,27 @@
+language: node_js
+node_js:
+- '10'
+install:
+- npm install
+script:
+- npm run lint
+- npm run build:dev
+- npm run build
+- npm run build-zip
+
+deploy:
+  - provider: releases
+    skip_cleanup: true
+    api_key:
+      secure: N3rBEULOtaOap46uvDufKSRtrhjWztHbUqKcOAOELsdIz7tEPkcmjWlqE7uoh+rTNwl5WH9M8q/aGfLgfHiQp9LuQefPengokAZnpnKUEMqh5CkXewhO0j3Qtzg1cRorsaL3sbyrhs6cw6noPAVwDXuZJtwJIdTwYXvKVYhiZTuKG5E+ra9gmbDM4VPjOzDsLE9br3Nbb34/bkewpZu5PyaTPDgP19KnlWfWOz2AksZOXaJvjuOKagAR814vmli0KuT4pF1a1rCyb77JiuIbC37YI5SHE89jcwmvnmH4eCEpRBTrSdMUkEhyYTzvPOf+ha7+shdults27FbL+zzVV0FNYgh6Bv1w2ls6KLIXKA/wJtiIJdx8oqONrN7YEM+xU0a16FgyAYICuUkqPCyoDU9OetJsNeUaqD1LhBEXKrqe/A3gLLqfat1ufP+PdrWJaUmsbmcR+5EhEXNRP8JJ2Fmwk+hYyXacTlgy75z6pioUpJlXbhBt3vq14o5IJPxYZlHIOgkfTJjRXU2eLmwfGZSIfwgmJT78KDeqfRPJEAiBeApO2lbf+44PeOsMG0sjWsuUqi0mfQTf2S4OvX60i7FQv7iUuwzRNnCCb7Rx90T7IlX9nxVR5XQiSCz+QvqsHi+fxZDq+nJ44UiwlPoqKyNCKWalwssgAPhw8JtW8hU=
+    file_glob: true
+    file: dist-zip/*.zip
+    on:
+      repo: mnao305/mai-score-extension
+      tags: true
+  - provider: script
+    skip_cleanup: true
+    script: npm run release
+    on:
+      branch: master
+      tags: true
