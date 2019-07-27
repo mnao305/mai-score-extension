@@ -113,18 +113,25 @@ export default {
               }
             }
 
+            let musicUpdateDate
+
             const type = classList[j].lastElementChild.src.indexOf('standard.png') >= 0 ? 'standard' : 'deluxe'
             let oldAchievement = []
             let oldDxScore = []
             if (gotOldScore && gotOldScore[`${tmp[1]}_${difficultyLevel[i]}_${type}`]) {
               oldAchievement = gotOldScore[`${tmp[1]}_${difficultyLevel[i]}_${type}`].achievement || []
               oldDxScore = gotOldScore[`${tmp[1]}_${difficultyLevel[i]}_${type}`].dxScore || []
+              musicUpdateDate = gotOldScore[`${tmp[1]}_${difficultyLevel[i]}_${type}`].date || date
+            } else {
+              musicUpdateDate = date
             }
             if ((oldAchievement.length >= 1 && oldAchievement[oldAchievement.length - 1].score !== Number(tmp[2].replace('%', ''))) || (oldAchievement.length === 0 && tmp[2])) {
               oldAchievement.push({ achievement: Number(tmp[2].replace('%', '')), date: date })
+              musicUpdateDate = date
             }
             if ((oldDxScore.length >= 1 && oldDxScore[oldDxScore.length - 1].score !== Number(tmp[3].replace(',', ''))) || (oldDxScore.length === 0 && tmp[3])) {
               oldDxScore.push({ dxScore: Number(tmp[3].replace(',', '')), date: date })
+              musicUpdateDate = date
             }
 
             const achievements = tmp[2] ? oldAchievement : null
@@ -140,6 +147,7 @@ export default {
               rank: rank,
               comboRank: comboRank,
               sync: sync,
+              date: musicUpdateDate,
             }
           }
         } catch (error) {
