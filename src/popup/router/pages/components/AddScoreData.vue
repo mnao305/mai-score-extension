@@ -151,7 +151,12 @@ export default {
             }
           }
         } catch (error) {
-          console.error(error)
+          console.error(error.data)
+          if (error.response && error.response.data && error.response.data.match(/メンテナンス中/)) {
+            this.message = 'maimaiでらっくすNETはメンテナンス中です。メンテナンス終了後に再度お試しください。'
+            this.error = true
+            return
+          }
           continue
         }
       }
