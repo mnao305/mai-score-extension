@@ -148,6 +148,7 @@ export default {
               comboRank: comboRank,
               sync: sync,
               date: musicUpdateDate,
+              musicID: classList[j].getElementsByTagName('input')[0].value,
             }
           }
         } catch (error) {
