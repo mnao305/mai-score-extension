@@ -110,6 +110,10 @@ export default {
                 sync = 'FS'
               } else if (imgList[k].src.indexOf('_fsd.png') >= 0) {
                 sync = 'FDX'
+              } else if (imgList[k].src.indexOf('_fsp.png') >= 0) {
+                sync = 'FS+'
+              } else if (imgList[k].src.indexOf('_fsdp.png') >= 0) {
+                sync = 'FDX+'
               }
             }
 
