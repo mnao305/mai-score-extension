@@ -192,7 +192,7 @@ export default {
     async getFetchUserData(date) {
       this.message = 'ユーザデータを読み込み中...'
       try {
-        const { data } = await Axios.get('https://maimaidx.jp/maimai-mobile/home/')
+        const { data } = await Axios.get('https://maimaidx.jp/maimai-mobile/playerData/')
         const element = document.createElement('div')
         element.innerHTML = data
         if (data.match(/ログインしてください/)) {
@@ -200,6 +200,13 @@ export default {
           this.error = true
         }
         const gotRating = element.getElementsByClassName('rating_block f_11')[0].innerText
+        const gotMaxRating = Number(element.getElementsByClassName('p_r_5 f_11')[0].innerText.split('：')[1])
+        const gotPlayCount = Number(
+          element
+            .getElementsByClassName('m_5 m_t_10 t_r f_12')[0]
+            .innerText.split('：')[1]
+            .split('回')[0]
+        )
         const docs = await db
           .collection('users')
           .doc(this.uid)
@@ -222,9 +229,14 @@ export default {
           .doc(this.uid)
           .collection('userData')
           .doc(this.uid)
-          .set({
-            ratings: ratings,
-          })
+          .set(
+            {
+              ratings: ratings,
+              maxRating: gotMaxRating,
+              playCount: gotPlayCount,
+            },
+            { merge: true }
+          )
       } catch (error) {
         console.error(error)
 
