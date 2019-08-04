@@ -4,6 +4,7 @@
     <p>舞スコア データ取得ツール</p>
     <button @click="getData">データ取得</button>
     <p v-if="message" :class="{ error: error }">{{ message }}</p>
+    <p v-if="publicData"><a :href="tweetURL" target="_blank">スコア更新ツイートする</a></p>
   </div>
 </template>
 
@@ -16,6 +17,8 @@ export default {
     return {
       message: '',
       error: false,
+      publicData: false,
+      tweetURL: '',
     }
   },
   props: {
@@ -187,6 +190,7 @@ export default {
         .update({
           _updateAt: date,
         })
+      this.getTweetURL()
       this.message = 'データ保存完了！'
     },
     async getFetchUserData(date) {
@@ -249,6 +253,15 @@ export default {
     async logout() {
       await auth.logout()
       location.reload()
+    },
+    async getTweetURL() {
+      const doc = await db
+        .collection('users')
+        .doc(this.uid)
+        .get()
+      const userData = doc.data()
+      this.publicData = userData.public
+      this.tweetURL = `https://twitter.com/intent/tweet?text=スコア更新しました！&hashtags=舞スコア&url=https://mai-score.com/user/${userData.displayName}`
     },
   },
 }
