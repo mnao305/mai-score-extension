@@ -2,7 +2,7 @@
   <div id="addScoreData">
     <a id="logout" href @click="logout">ログアウト</a>
     <p>舞スコア データ取得ツール</p>
-    <button @click="getData">データ取得</button>
+    <button :disabled="isDisable" class="addDataBtn" :class="{ disableBtn: isDisable }" @click="getData">データ取得</button>
     <p v-if="message" :class="{ error: error }">{{ message }}</p>
     <p v-if="publicData"><a :href="tweetURL" target="_blank">スコア更新ツイートする</a></p>
   </div>
@@ -19,6 +19,7 @@ export default {
       error: false,
       publicData: false,
       tweetURL: '',
+      isDisable: false,
     }
   },
   props: {
@@ -27,6 +28,7 @@ export default {
   methods: {
     async getData() {
       this.error = false
+      this.isDisable = true
       this.message = 'データ取得準備中...'
       const date = Date.now()
       const difficultyLevel = ['Basic', 'Advanced', 'Expert', 'Master', 'ReMaster']
@@ -49,6 +51,7 @@ export default {
           if (data.match(/ログインしてください/)) {
             this.message = 'maimaiでらっくすNETにログインしていません。ログインしてから再度お試しください。'
             this.error = true
+            this.isDisable = false
             return
           }
           const tmpEl = document.createElement('div')
@@ -163,6 +166,7 @@ export default {
           if (error.response && error.response.data && error.response.data.match(/メンテナンス中/)) {
             this.message = 'maimaiでらっくすNETはメンテナンス中です。メンテナンス終了後に再度お試しください。'
             this.error = true
+            this.isDisable = false
             return
           }
           continue
@@ -202,6 +206,7 @@ export default {
         if (data.match(/ログインしてください/)) {
           this.message = 'maimaiでらっくすNETにログインしていません。ログインしてから再度お試しください。'
           this.error = true
+          this.isDisable = false
         }
         const gotRating = element.getElementsByClassName('rating_block f_11')[0].innerText
         const gotMaxRating = Number(element.getElementsByClassName('p_r_5 f_11')[0].innerText.split('：')[1])
@@ -247,6 +252,7 @@ export default {
         if (error.response && error.response.data && error.response.data.match(/メンテナンス中/)) {
           this.message = 'maimaiでらっくすNETはメンテナンス中です。メンテナンス終了後に再度お試しください。'
           this.error = true
+          this.isDisable = false
         }
       }
     },
@@ -276,6 +282,25 @@ export default {
     display: block;
     text-align: right;
     margin: 0;
+  }
+  .addDataBtn {
+    padding: 0.2em 0.5em;
+    text-decoration: none;
+    color: #0097a7;
+    border: solid 2px #0097a7;
+    border-radius: 3px;
+    transition: 0.4s;
+    background: white;
+    cursor: pointer;
+  }
+  .addDataBtn:hover {
+    background: #00acc1;
+    color: white;
+  }
+  .disableBtn {
+    cursor: not-allowed;
+    background: #00acc1;
+    color: white;
   }
 }
 </style>
