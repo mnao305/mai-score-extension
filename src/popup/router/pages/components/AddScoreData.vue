@@ -216,6 +216,9 @@ export default {
             .innerText.split('：')[1]
             .split('回')[0]
         )
+        const gotUserName = element.getElementsByClassName('name_block f_l f_14')[0].innerText.replace(/[Ａ-Ｚａ-ｚ０-９]/g, s => {
+          return String.fromCharCode(s.charCodeAt(0) - 65248)
+        })
         const docs = await db
           .collection('users')
           .doc(this.uid)
@@ -243,6 +246,7 @@ export default {
               ratings: ratings,
               maxRating: gotMaxRating,
               playCount: gotPlayCount,
+              userName: gotUserName,
             },
             { merge: true }
           )
