@@ -84,7 +84,7 @@ const config = {
           if (config.mode === 'development') {
             const tmp = jsonContent['content_security_policy']
             const i = tmp.indexOf(';')
-            jsonContent['content_security_policy'] = `${tmp.slice(0, i)} 'unsafe-eval'${tmp.slice(i, tmp.length)}`
+            jsonContent['content_security_policy'] = `${tmp.slice(0, i)}${tmp.slice(i, tmp.length)}`
           }
 
           return JSON.stringify(jsonContent, null, 2)
