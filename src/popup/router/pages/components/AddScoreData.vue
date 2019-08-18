@@ -33,6 +33,7 @@ export default {
       const date = Date.now()
       const difficultyLevel = ['Basic', 'Advanced', 'Expert', 'Master', 'ReMaster']
       let scoreData = []
+      let updateScoreData = []
       for (let i = 0; i < difficultyLevel.length; i++) {
         const docs = await db
           .collection('users')
@@ -135,16 +136,19 @@ export default {
             } else {
               musicUpdateDate = date
             }
+            let updateFlg = false
             if (
               (oldAchievement.length >= 1 && oldAchievement[oldAchievement.length - 1].achievement !== Number(tmp[2].replace('%', ''))) ||
               (oldAchievement.length === 0 && tmp[2])
             ) {
               oldAchievement.push({ achievement: Number(tmp[2].replace('%', '')), date: date })
               musicUpdateDate = date
+              updateFlg = true
             }
             if ((oldDxScore.length >= 1 && oldDxScore[oldDxScore.length - 1].dxScore !== Number(tmp[3].replace(',', ''))) || (oldDxScore.length === 0 && tmp[3])) {
               oldDxScore.push({ dxScore: Number(tmp[3].replace(',', '')), date: date })
               musicUpdateDate = date
+              updateFlg = true
             }
 
             const achievements = tmp[2] ? oldAchievement : null
@@ -163,6 +167,9 @@ export default {
               date: musicUpdateDate,
               musicID: classList[j].getElementsByTagName('input')[0].value,
             }
+            if (updateFlg) {
+              updateScoreData.push(scoreData[difficultyLevel[i]][`${tmp[1]}_${difficultyLevel[i]}_${type}`])
+            }
           }
         } catch (error) {
           console.error(error.data)
@@ -179,16 +186,17 @@ export default {
       await this.getFetchUserData(date)
       this.message = 'データ保存中...'
 
-      for (let i = 0; i < difficultyLevel.length; i++) {
-        db.collection('users')
-          .doc(this.uid)
-          .collection('scores')
-          .doc(difficultyLevel[i])
-          .set(scoreData[difficultyLevel[i]], { merge: true })
-          .catch(e => {
-            console.error(e)
-          })
-      }
+      // テスト用に一旦保存停止
+      // for (let i = 0; i < difficultyLevel.length; i++) {
+      //   db.collection('users')
+      //     .doc(this.uid)
+      //     .collection('scores')
+      //     .doc(difficultyLevel[i])
+      //     .set(scoreData[difficultyLevel[i]], { merge: true })
+      //     .catch(e => {
+      //       console.error(e)
+      //     })
+      // }
       await db
         .collection('users')
         .doc(this.uid)
@@ -198,6 +206,7 @@ export default {
           _updateAt: date,
         })
       this.getTweetURL()
+      this.createScoreImg(updateScoreData)
       this.message = 'データ保存完了！'
     },
     async getFetchUserData(date) {
@@ -275,6 +284,51 @@ export default {
       const userData = doc.data()
       this.publicData = userData.public
       this.tweetURL = `https://twitter.com/intent/tweet?text=スコア更新しました！&hashtags=舞スコア&url=https://mai-score.com/user/${userData.displayName}`
+    },
+    createScoreImg(updateScoreData) {
+      console.log(updateScoreData)
+      updateScoreData.reverse()
+
+      if (updateScoreData.length >= 10) {
+        updateScoreData = updateScoreData.slice(0, 10)
+      }
+
+      let canvas = document.createElement('canvas')
+      canvas.width = 600
+      canvas.height = 80 * updateScoreData.length
+      canvas.style.width = 600
+      canvas.style.height = 80 * updateScoreData.length
+      let ctx = canvas.getContext('2d')
+      ctx.fillStyle = 'white'
+      ctx.fillRect(0, 0, 600, 600)
+      ctx.fillStyle = 'black'
+      updateScoreData.forEach((v, i) => {
+        console.log(v)
+        ctx.font = `24px 'Meiryo'`
+        const level = Math.round(v.level) === v.level ? v.level : `${v.level - 0.5}+`
+        ctx.fillText(`[${v.difficultyLevel}|${level}]${v.title}`, 10, 30 * (i * 2 + 1) + 15 * i)
+        let text
+        let dxText
+        if (v.achievements.length >= 2) {
+          text = `${v.achievements.slice(-2)[0].achievement}%→${v.achievements.slice(-1)[0].achievement}%  +${(
+            v.achievements.slice(-1)[0].achievement - v.achievements.slice(-2)[0].achievement
+          ).toFixed(4)}%`
+          dxText = `${v.dxScores.slice(-2)[0].dxScore}→${v.dxScores.slice(-1)[0].dxScore}  +${v.dxScores.slice(-1)[0].dxScore - v.dxScores.slice(-2)[0].dxScore}`
+        } else {
+          text = `0.0000%→${v.achievements.slice(-1)[0].achievement}%  +${v.achievements[0].achievement.toFixed(4)}%`
+          dxText = `0→${v.dxScores.slice(-1)[0].dxScore}  +${v.dxScores[0].dxScore}`
+        }
+        ctx.font = `16px 'Meiryo'`
+        ctx.fillText(text, 10, 30 * (i * 2 + 1) + 20 + 15 * i)
+        ctx.fillText(dxText, 10, 30 * (i * 2 + 1) + 40 + 15 * i)
+        ctx.fillText(`${v.rank}  ${v.sync || ''}`, 200, 30 * (i * 2 + 1) + 40 + 15 * i)
+      })
+      const imgUrl = canvas.toDataURL('image/jpeg')
+      // テスト用 - 画像ダウングレード
+      let aTag = document.createElement('a')
+      aTag.href = imgUrl
+      aTag.download = 'test.jpg'
+      aTag.click()
     },
   },
 }
