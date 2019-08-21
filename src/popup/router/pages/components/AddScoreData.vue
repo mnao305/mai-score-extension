@@ -306,6 +306,7 @@ export default {
       ctx.fillStyle = 'black'
       updateScoreData.forEach((v, i) => {
         console.log(v)
+        this.saveMusicIcon(v.musicID)
         ctx.font = `24px 'Meiryo'`
         const level = Math.round(v.level) === v.level ? v.level : `${v.level - 0.5}+`
         ctx.fillText(`[${v.difficultyLevel}|${level}]${v.title}`, 10, 30 * (i * 2 + 1) + 15 * i)
@@ -333,6 +334,28 @@ export default {
           .ref(`userData/${this.uid}/`)
           .child('updateScore.jpg')
         const data = await storageRef.putString(imgUrl, 'data_url')
+        console.log(data)
+      } catch (error) {
+        console.error(error)
+      }
+    },
+    async saveMusicIcon(musicID) {
+      const { data } = await Axios.get(`https://maimaidx.jp/maimai-mobile/record/musicDetail/?idx=${encodeURIComponent(musicID)}`)
+      const tmpEl = document.createElement('div')
+      tmpEl.innerHTML = data
+
+      const title = tmpEl.getElementsByClassName('m_5 f_15 break')[0].innerText
+      const musicImgUrl = tmpEl.getElementsByClassName('w_180 m_5 f_l')[0].src
+      const musicIcon = await Axios.get(musicImgUrl, { responseType: 'arraybuffer' })
+      console.log(title)
+      try {
+        const storageRef = firebase
+          .storage()
+          .ref('musicIcon/')
+          .child(`${title}.png`)
+        const data = await storageRef.put(musicIcon.data, {
+          contentType: 'image/png',
+        })
         console.log(data)
       } catch (error) {
         console.error(error)
