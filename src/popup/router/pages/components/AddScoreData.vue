@@ -12,6 +12,8 @@
 import Axios from 'axios'
 import { db } from '../../../plugins/firestore'
 import auth from '../../../plugins/auth'
+import firebase from '../../../plugins/firebase'
+
 export default {
   data() {
     return {
@@ -285,7 +287,7 @@ export default {
       this.publicData = userData.public
       this.tweetURL = `https://twitter.com/intent/tweet?text=スコア更新しました！&hashtags=舞スコア&url=https://mai-score.com/user/${userData.displayName}`
     },
-    createScoreImg(updateScoreData) {
+    async createScoreImg(updateScoreData) {
       console.log(updateScoreData)
       updateScoreData.reverse()
 
@@ -324,11 +326,17 @@ export default {
         ctx.fillText(`${v.rank}  ${v.sync || ''}`, 200, 30 * (i * 2 + 1) + 40 + 15 * i)
       })
       const imgUrl = canvas.toDataURL('image/jpeg')
-      // テスト用 - 画像ダウングレード
-      let aTag = document.createElement('a')
-      aTag.href = imgUrl
-      aTag.download = 'test.jpg'
-      aTag.click()
+      // Firebase Storageに画像をアップロード
+      try {
+        const storageRef = firebase
+          .storage()
+          .ref(`userData/${this.uid}/`)
+          .child('updateScore.jpg')
+        const data = await storageRef.putString(imgUrl, 'data_url')
+        console.log(data)
+      } catch (error) {
+        console.error(error)
+      }
     },
   },
 }
