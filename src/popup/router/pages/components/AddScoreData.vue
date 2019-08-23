@@ -207,8 +207,8 @@ export default {
         .update({
           _updateAt: date,
         })
-      this.getTweetURL()
-      this.createScoreImg(updateScoreData)
+      await this.getTweetURL()
+      await this.createScoreImg(updateScoreData)
       this.message = 'データ保存完了！'
     },
     async getFetchUserData(date) {
@@ -291,25 +291,44 @@ export default {
       console.log(updateScoreData)
       updateScoreData.reverse()
 
-      if (updateScoreData.length >= 10) {
-        updateScoreData = updateScoreData.slice(0, 10)
+      if (updateScoreData.length >= 16) {
+        updateScoreData = updateScoreData.slice(0, 16)
       }
 
       let canvas = document.createElement('canvas')
-      canvas.width = 600
-      canvas.height = 80 * updateScoreData.length
-      canvas.style.width = 600
-      canvas.style.height = 80 * updateScoreData.length
+      const height = 75 * updateScoreData.length
+      canvas.width = 700
+      canvas.height = height
+      canvas.style.width = 700
+      canvas.style.height = height
       let ctx = canvas.getContext('2d')
       ctx.fillStyle = 'white'
-      ctx.fillRect(0, 0, 600, 600)
+      ctx.fillRect(0, 0, 700, height)
       ctx.fillStyle = 'black'
-      updateScoreData.forEach((v, i) => {
+
+      let i = 0
+      for (const v of updateScoreData) {
         console.log(v)
-        this.saveMusicIcon(v.musicID)
+        try {
+          const musicIconUrl = await firebase
+            .storage()
+            .ref()
+            .child(`musicIcon/${v.title}.png`)
+            .getDownloadURL()
+
+          await loadImage(musicIconUrl)
+        } catch (error) {
+          if (error.code === 'storage/object-not-found') {
+            const musicIconUrl = await this.saveMusicIcon(v.musicID)
+            await loadImage(musicIconUrl)
+          } else {
+            console.error(error)
+          }
+        }
+
         ctx.font = `24px 'Meiryo'`
         const level = Math.round(v.level) === v.level ? v.level : `${v.level - 0.5}+`
-        ctx.fillText(`[${v.difficultyLevel}|${level}]${v.title}`, 10, 30 * (i * 2 + 1) + 15 * i)
+        ctx.fillText(`[${v.difficultyLevel}|${level}]${v.title}`, 80, 30 * (i * 2 + 1) + 15 * i)
         let text
         let dxText
         if (v.achievements.length >= 2) {
@@ -322,10 +341,11 @@ export default {
           dxText = `0→${v.dxScores.slice(-1)[0].dxScore}  +${v.dxScores[0].dxScore}`
         }
         ctx.font = `16px 'Meiryo'`
-        ctx.fillText(text, 10, 30 * (i * 2 + 1) + 20 + 15 * i)
-        ctx.fillText(dxText, 10, 30 * (i * 2 + 1) + 40 + 15 * i)
-        ctx.fillText(`${v.rank}  ${v.sync || ''}`, 200, 30 * (i * 2 + 1) + 40 + 15 * i)
-      })
+        ctx.fillText(text, 80, 30 * (i * 2 + 1) + 20 + 15 * i)
+        ctx.fillText(dxText, 80, 30 * (i * 2 + 1) + 40 + 15 * i)
+        ctx.fillText(`${v.rank}  ${v.comboRank || ''}  ${v.sync || ''}`, 270, 30 * (i * 2 + 1) + 40 + 15 * i)
+        i++
+      }
       const imgUrl = canvas.toDataURL('image/jpeg')
       // Firebase Storageに画像をアップロード
       try {
@@ -338,6 +358,18 @@ export default {
       } catch (error) {
         console.error(error)
       }
+      function loadImage(src) {
+        return new Promise((resolve, reject) => {
+          const img = new Image()
+          img.onload = () => {
+            ctx.drawImage(img, 10, 10 + 75 * i, 60, 60)
+            resolve()
+          }
+          img.onerror = e => reject(e)
+          img.crossOrigin = 'anonymous'
+          img.src = src
+        })
+      }
     },
     async saveMusicIcon(musicID) {
       const { data } = await Axios.get(`https://maimaidx.jp/maimai-mobile/record/musicDetail/?idx=${encodeURIComponent(musicID)}`)
@@ -347,7 +379,6 @@ export default {
       const title = tmpEl.getElementsByClassName('m_5 f_15 break')[0].innerText
       const musicImgUrl = tmpEl.getElementsByClassName('w_180 m_5 f_l')[0].src
       const musicIcon = await Axios.get(musicImgUrl, { responseType: 'arraybuffer' })
-      console.log(title)
       try {
         const storageRef = firebase
           .storage()
@@ -360,6 +391,7 @@ export default {
       } catch (error) {
         console.error(error)
       }
+      return musicImgUrl
     },
   },
 }
