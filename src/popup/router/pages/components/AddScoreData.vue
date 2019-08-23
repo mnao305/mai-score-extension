@@ -291,8 +291,8 @@ export default {
       console.log(updateScoreData)
       updateScoreData.reverse()
 
-      if (updateScoreData.length >= 16) {
-        updateScoreData = updateScoreData.slice(0, 16)
+      if (updateScoreData.length >= 20) {
+        updateScoreData = updateScoreData.slice(0, 20)
       }
 
       let canvas = document.createElement('canvas')
