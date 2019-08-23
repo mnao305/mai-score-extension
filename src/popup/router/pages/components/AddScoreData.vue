@@ -327,8 +327,8 @@ export default {
         }
 
         ctx.font = `24px 'Meiryo'`
-        const level = Math.round(v.level) === v.level ? v.level : `${v.level - 0.5}+`
-        ctx.fillText(`[${v.difficultyLevel}|${level}]${v.title}`, 80, 30 * (i * 2 + 1) + 15 * i)
+        const type = v.type === 'deluxe' ? 'DX' : 'Std'
+        ctx.fillText(`[${v.difficultyLevel.slice(0, 3)}|${type}] ${v.title}`, 80, 30 * (i * 2 + 1) + 15 * i)
         let text
         let dxText
         if (v.achievements.length >= 2) {
