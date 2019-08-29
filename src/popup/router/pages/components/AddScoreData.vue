@@ -212,6 +212,10 @@ export default {
       }
       console.log(scoreData)
       await this.getFetchUserData(date)
+      if (updateScoreData.length <= 0) {
+        this.message = '更新データはありませんでした'
+        return
+      }
       this.message = 'データ保存中...'
 
       for (let i = 0; i < difficultyLevel.length; i++) {
