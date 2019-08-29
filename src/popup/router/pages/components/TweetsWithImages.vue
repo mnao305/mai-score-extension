@@ -1,5 +1,5 @@
 <template>
-  <a href="" @click.prevent="updateScoreTweet">画像付きスコア更新ツイートする</a>
+  <a href="" @click.prevent="updateScoreTweet">画像付きスコア更新ツイート</a>
 </template>
 
 <script>
