@@ -4,7 +4,11 @@
     <p>舞スコア データ取得ツール</p>
     <button :disabled="isDisable" class="addDataBtn" :class="{ disableBtn: isDisable }" @click="getData">データ取得</button>
     <p v-if="message" :class="{ error: error }">{{ message }}</p>
-    <p v-if="publicData"><a :href="tweetURL" target="_blank">スコア更新ツイートする</a></p>
+    <div v-if="message === 'データ保存完了！'" class="tweetLink">
+      <p v-if="publicData"><a :href="tweetURL" target="_blank">スコア更新ツイート</a></p>
+      <p v-if="publicData && twitterLogin"><TweetsWithImages @tweetStatusUpdate="tweetStatusUpdate" /></p>
+    </div>
+    <p v-if="tweetStatus">{{ tweetStatus }}</p>
   </div>
 </template>
 
@@ -13,8 +17,12 @@ import Axios from 'axios'
 import { db } from '../../../plugins/firestore'
 import auth from '../../../plugins/auth'
 import firebase from '../../../plugins/firebase'
+import TweetsWithImages from './TweetsWithImages.vue'
 
 export default {
+  components: {
+    TweetsWithImages,
+  },
   data() {
     return {
       message: '',
@@ -22,10 +30,28 @@ export default {
       publicData: false,
       tweetURL: '',
       isDisable: false,
+      twitterLogin: false,
+      tweetStatus: '',
     }
   },
   props: {
     uid: String,
+  },
+  async created() {
+    const docs = await db
+      .collection('users')
+      .doc(this.uid)
+      .collection('secure')
+      .doc(this.uid)
+      .get()
+
+    let data
+    if (docs && docs.exists) {
+      data = docs.data()
+    }
+    this.twitterLogin = data.providerData.some(v => {
+      return v.providerId === 'twitter.com'
+    })
   },
   methods: {
     async getData() {
@@ -393,6 +419,11 @@ export default {
       }
       return musicImgUrl
     },
+    tweetStatusUpdate(str) {
+      console.log(str)
+
+      this.tweetStatus = str
+    },
   },
 }
 </script>
@@ -425,6 +456,10 @@ export default {
     cursor: not-allowed;
     background: #00acc1;
     color: white;
+  }
+  .tweetLink {
+    display: flex;
+    justify-content: space-around;
   }
 }
 </style>
