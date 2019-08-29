@@ -32,7 +32,7 @@ export default {
 
 <style lang="scss" scoped>
 #popupIndex {
-  width: 300px;
+  width: 320px;
   text-align: center;
 }
 </style>
