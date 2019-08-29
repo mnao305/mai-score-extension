@@ -214,17 +214,16 @@ export default {
       await this.getFetchUserData(date)
       this.message = 'データ保存中...'
 
-      // テスト用に一旦保存停止
-      // for (let i = 0; i < difficultyLevel.length; i++) {
-      //   db.collection('users')
-      //     .doc(this.uid)
-      //     .collection('scores')
-      //     .doc(difficultyLevel[i])
-      //     .set(scoreData[difficultyLevel[i]], { merge: true })
-      //     .catch(e => {
-      //       console.error(e)
-      //     })
-      // }
+      for (let i = 0; i < difficultyLevel.length; i++) {
+        db.collection('users')
+          .doc(this.uid)
+          .collection('scores')
+          .doc(difficultyLevel[i])
+          .set(scoreData[difficultyLevel[i]], { merge: true })
+          .catch(e => {
+            console.error(e)
+          })
+      }
       await db
         .collection('users')
         .doc(this.uid)
