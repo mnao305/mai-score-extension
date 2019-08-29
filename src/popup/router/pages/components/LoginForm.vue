@@ -37,6 +37,19 @@ export default {
           return
         }
 
+        await db
+          .collection('users')
+          .doc(dbData.id)
+          .collection('secure')
+          .doc(dbData.id)
+          .set(
+            {
+              accessToken: data.credential.accessToken,
+              secret: data.credential.secret,
+            },
+            { merge: true }
+          )
+
         location.reload()
       } catch (error) {
         this.errorMessage = 'ログインに失敗しました。'
