@@ -223,6 +223,8 @@ export default {
       }
       console.log(scoreData)
       await this.getFetchUserData(date)
+      this.message = 'プレイ履歴取得中...'
+      await this.getRecordData()
       if (updateScoreData.length <= 0) {
         this.message = '更新データはありませんでした'
         return
@@ -440,6 +442,41 @@ export default {
       console.log(str)
 
       this.tweetStatus = str
+    },
+    async getRecordData() {
+      const { data } = await Axios.get('https://maimaidx.jp/maimai-mobile/record/')
+      const tmpEl = document.createElement('div')
+      tmpEl.innerHTML = data
+      const classList = tmpEl.getElementsByClassName('p_10 t_l f_0 v_b')
+      console.log(classList)
+      console.log(classList[0])
+      let recordList = []
+
+      classList.forEach(el => {
+        const splitedMusicImgUrl = el.getElementsByClassName('music_img m_5 m_r_0 f_l')[0].src.split('/')
+        const musicID = splitedMusicImgUrl[splitedMusicImgUrl.length - 1].split('.')[0]
+        const title = el.getElementsByClassName('basic_block m_5 p_5 p_l_10 f_13 break')[0].innerText
+        const tmpDifficultyLevel = el
+          .getElementsByClassName('playlog_diff v_b')[0]
+          .src.split('_')[1]
+          .split('.')[0]
+        const difficultyLevel = tmpDifficultyLevel[0].toUpperCase() + tmpDifficultyLevel.slice(1)
+        const idx = el.getElementsByTagName('input')[0].value
+        const payload = { musicID, title, difficultyLevel, idx }
+        recordList.push(payload)
+      })
+      console.log(recordList)
+
+      let musicIDs = []
+      let difficultyLevel = []
+      let deduplicationRecordList = recordList.filter(e => {
+        if (!(musicIDs.indexOf(e['musicID']) >= 0 && difficultyLevel.indexOf(e['difficultyLevel']) >= 0)) {
+          musicIDs.push(e['musicID'])
+          difficultyLevel.push(e['difficultyLevel'])
+          return e
+        }
+      })
+      console.log(deduplicationRecordList)
     },
   },
 }
