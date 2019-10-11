@@ -462,7 +462,8 @@ export default {
           .split('.')[0]
         const difficultyLevel = tmpDifficultyLevel[0].toUpperCase() + tmpDifficultyLevel.slice(1)
         const idx = el.getElementsByTagName('input')[0].value
-        const payload = { musicID, title, difficultyLevel, idx }
+        const type = el.getElementsByClassName('playlog_music_kind_icon')[0].src.indexOf('standard.png') >= 0 ? 'standard' : 'deluxe'
+        const payload = { musicID, title, difficultyLevel, idx, type }
         recordList.push(payload)
       })
       console.log(recordList)
