@@ -466,18 +466,65 @@ export default {
         const payload = { musicID, title, difficultyLevel, idx, type }
         recordList.push(payload)
       })
-      console.log(recordList)
-
-      let musicIDs = []
-      let difficultyLevel = []
+      // 重複を削除
+      let tmpList = []
       let deduplicationRecordList = recordList.filter(e => {
-        if (!(musicIDs.indexOf(e['musicID']) >= 0 && difficultyLevel.indexOf(e['difficultyLevel']) >= 0)) {
-          musicIDs.push(e['musicID'])
-          difficultyLevel.push(e['difficultyLevel'])
+        if (!(tmpList.indexOf(`${e['musicID']}${e['difficultyLevel']}${e['type']}`) >= 0)) {
+          tmpList.push(`${e['musicID']}${e['difficultyLevel']}${e['type']}`)
           return e
         }
       })
       console.log(deduplicationRecordList)
+
+      let musicDataList = { Basic: {}, Advanced: {}, Expert: {}, Master: {}, Remaster: {} }
+
+      try {
+        const sleep = msec => new Promise(resolve => setTimeout(resolve, msec))
+        const sum = arr => {
+          return arr.reduce((prev, current, i, arr) => {
+            return prev + current
+          })
+        }
+        for (let i = 0; i < deduplicationRecordList.length; i++) {
+          const idx = deduplicationRecordList[i].idx
+          delete deduplicationRecordList[i].idx
+          const { data } = await Axios.get(`https://maimaidx.jp/maimai-mobile/record/playlogDetail/?idx=${idx}`)
+          const tmpEl = document.createElement('div')
+          tmpEl.innerHTML = data
+          const comboSync = tmpEl.getElementsByClassName('f_r f_14 white')
+          deduplicationRecordList[i].maxCombo = Number(comboSync[0].innerText.split('/')[1])
+          deduplicationRecordList[i].maxSync = Number(comboSync[1].innerText.split('/')[1])
+
+          const rawNotes = tmpEl
+            .getElementsByClassName('playlog_notes_detail t_r f_l f_11 f_b')[0]
+            .innerText.trim()
+            .split(/\t+|\n/)
+            .filter(v => v !== '')
+          let notes = [[], [], [], [], []]
+          let cnt = 0
+          let index = 0
+          for (let j = 0; j < rawNotes.length; j++) {
+            if (rawNotes[j] === '　') {
+              notes[cnt] = [0]
+              cnt++
+            } else {
+              notes[cnt].push(Number(rawNotes[j]))
+              index++
+              if (index >= 5) {
+                cnt++
+                index = 0
+              }
+            }
+          }
+
+          deduplicationRecordList[i].notes = { tap: sum(notes[0]), hold: sum(notes[1]), slide: sum(notes[2]), touch: sum(notes[3]), break: sum(notes[4]) }
+          musicDataList[deduplicationRecordList[i].difficultyLevel][deduplicationRecordList[i].musicID] = deduplicationRecordList[i]
+          if (i % 10 === 0) await sleep(1000)
+        }
+      } catch (error) {
+        console.error(error)
+      }
+      console.log(musicDataList)
     },
   },
 }
