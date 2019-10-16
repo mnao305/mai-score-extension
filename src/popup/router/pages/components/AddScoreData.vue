@@ -223,6 +223,8 @@ export default {
       }
       console.log(scoreData)
       await this.getFetchUserData(date)
+      this.message = 'プレイ履歴取得中...'
+      await this.getRecordData()
       if (updateScoreData.length <= 0) {
         this.message = '更新データはありませんでした'
         return
@@ -440,6 +442,108 @@ export default {
       console.log(str)
 
       this.tweetStatus = str
+    },
+    async getRecordData() {
+      let gotOldMusicData = { Basic: {}, Advanced: {}, Expert: {}, Master: {}, ReMaster: {} }
+      for (const key in gotOldMusicData) {
+        const docs = await db
+          .collection('musicData')
+          .doc(key)
+          .get()
+        if (docs && docs.exists) {
+          gotOldMusicData[key] = docs.data()
+        }
+      }
+
+      const { data } = await Axios.get('https://maimaidx.jp/maimai-mobile/record/')
+      const tmpEl = document.createElement('div')
+      tmpEl.innerHTML = data
+      const classList = tmpEl.getElementsByClassName('p_10 t_l f_0 v_b')
+      console.log(classList)
+      console.log(classList[0])
+      let recordList = []
+
+      classList.forEach(el => {
+        const splitedMusicImgUrl = el.getElementsByClassName('music_img m_5 m_r_0 f_l')[0].src.split('/')
+        const musicID = splitedMusicImgUrl[splitedMusicImgUrl.length - 1].split('.')[0]
+        const title = el.getElementsByClassName('basic_block m_5 p_5 p_l_10 f_13 break')[0].innerText
+        const tmpDifficultyLevel = el
+          .getElementsByClassName('playlog_diff v_b')[0]
+          .src.split('_')[1]
+          .split('.')[0]
+        const difficultyLevel = tmpDifficultyLevel === 'remaster' ? 'ReMaster' : tmpDifficultyLevel[0].toUpperCase() + tmpDifficultyLevel.slice(1)
+        const idx = el.getElementsByTagName('input')[0].value
+        const type = el.getElementsByClassName('playlog_music_kind_icon')[0].src.indexOf('standard.png') >= 0 ? 'standard' : 'deluxe'
+        const payload = { musicID, title, difficultyLevel, idx, type }
+        if (gotOldMusicData[difficultyLevel][`${musicID}_${type}`] == null) {
+          recordList.push(payload)
+        }
+      })
+      // 重複を削除
+      let tmpList = []
+      let deduplicationRecordList = recordList.filter(e => {
+        if (!(tmpList.indexOf(`${e['musicID']}${e['difficultyLevel']}${e['type']}`) >= 0)) {
+          tmpList.push(`${e['musicID']}${e['difficultyLevel']}${e['type']}`)
+          return e
+        }
+      })
+      console.log(deduplicationRecordList)
+
+      let musicDataList = { Basic: {}, Advanced: {}, Expert: {}, Master: {}, ReMaster: {} }
+
+      try {
+        const sleep = msec => new Promise(resolve => setTimeout(resolve, msec))
+        const sum = arr => {
+          return arr.reduce((prev, current, i, arr) => {
+            return prev + current
+          })
+        }
+        for (let i = 0; i < deduplicationRecordList.length; i++) {
+          const idx = deduplicationRecordList[i].idx
+          delete deduplicationRecordList[i].idx
+          const { data } = await Axios.get(`https://maimaidx.jp/maimai-mobile/record/playlogDetail/?idx=${idx}`)
+          const tmpEl = document.createElement('div')
+          tmpEl.innerHTML = data
+          deduplicationRecordList[i].maxCombo = Number(tmpEl.getElementsByClassName('f_r f_14 white')[0].innerText.split('/')[1])
+
+          const rawNotes = tmpEl
+            .getElementsByClassName('playlog_notes_detail t_r f_l f_11 f_b')[0]
+            .innerText.trim()
+            .split(/\t+|\n/)
+            .filter(v => v !== '')
+          let notes = [[], [], [], [], []]
+          let cnt = 0
+          let index = 0
+          for (let j = 0; j < rawNotes.length; j++) {
+            if (rawNotes[j] === '　') {
+              notes[cnt] = [0]
+              cnt++
+            } else {
+              notes[cnt].push(Number(rawNotes[j]))
+              index++
+              if (index >= 5) {
+                cnt++
+                index = 0
+              }
+            }
+          }
+
+          deduplicationRecordList[i].notes = { tap: sum(notes[0]), hold: sum(notes[1]), slide: sum(notes[2]), touch: sum(notes[3]), break: sum(notes[4]) }
+          musicDataList[deduplicationRecordList[i].difficultyLevel][`${deduplicationRecordList[i].musicID}_${deduplicationRecordList[i].type}`] = deduplicationRecordList[i]
+          if (i % 10 === 0) await sleep(1000)
+        }
+      } catch (error) {
+        console.error(error)
+      }
+
+      for (const key in musicDataList) {
+        db.collection('musicData')
+          .doc(key)
+          .set(musicDataList[key], { merge: true })
+          .catch(e => {
+            console.error(e)
+          })
+      }
     },
   },
 }
