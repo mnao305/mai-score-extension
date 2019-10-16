@@ -516,7 +516,7 @@ export default {
           }
 
           deduplicationRecordList[i].notes = { tap: sum(notes[0]), hold: sum(notes[1]), slide: sum(notes[2]), touch: sum(notes[3]), break: sum(notes[4]) }
-          musicDataList[deduplicationRecordList[i].difficultyLevel][deduplicationRecordList[i].musicID] = deduplicationRecordList[i]
+          musicDataList[deduplicationRecordList[i].difficultyLevel][`${deduplicationRecordList[i].musicID}_${deduplicationRecordList[i].type}`] = deduplicationRecordList[i]
           if (i % 10 === 0) await sleep(1000)
         }
       } catch (error) {
