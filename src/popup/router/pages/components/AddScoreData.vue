@@ -491,9 +491,7 @@ export default {
           const { data } = await Axios.get(`https://maimaidx.jp/maimai-mobile/record/playlogDetail/?idx=${idx}`)
           const tmpEl = document.createElement('div')
           tmpEl.innerHTML = data
-          const comboSync = tmpEl.getElementsByClassName('f_r f_14 white')
-          deduplicationRecordList[i].maxCombo = Number(comboSync[0].innerText.split('/')[1])
-          deduplicationRecordList[i].maxSync = Number(comboSync[1].innerText.split('/')[1])
+          deduplicationRecordList[i].maxCombo = Number(tmpEl.getElementsByClassName('f_r f_14 white')[0].innerText.split('/')[1])
 
           const rawNotes = tmpEl
             .getElementsByClassName('playlog_notes_detail t_r f_l f_11 f_b')[0]
@@ -524,7 +522,6 @@ export default {
       } catch (error) {
         console.error(error)
       }
-      console.log(musicDataList)
     },
   },
 }
