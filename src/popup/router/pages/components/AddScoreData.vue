@@ -444,6 +444,17 @@ export default {
       this.tweetStatus = str
     },
     async getRecordData() {
+      let gotOldMusicData = { Basic: {}, Advanced: {}, Expert: {}, Master: {}, ReMaster: {} }
+      for (const key in gotOldMusicData) {
+        const docs = await db
+          .collection('musicData')
+          .doc(key)
+          .get()
+        if (docs && docs.exists) {
+          gotOldMusicData[key] = docs.data()
+        }
+      }
+
       const { data } = await Axios.get('https://maimaidx.jp/maimai-mobile/record/')
       const tmpEl = document.createElement('div')
       tmpEl.innerHTML = data
@@ -464,7 +475,9 @@ export default {
         const idx = el.getElementsByTagName('input')[0].value
         const type = el.getElementsByClassName('playlog_music_kind_icon')[0].src.indexOf('standard.png') >= 0 ? 'standard' : 'deluxe'
         const payload = { musicID, title, difficultyLevel, idx, type }
-        recordList.push(payload)
+        if (gotOldMusicData[difficultyLevel][`${musicID}_${type}`] == null) {
+          recordList.push(payload)
+        }
       })
       // 重複を削除
       let tmpList = []
