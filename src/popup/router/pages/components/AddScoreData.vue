@@ -522,6 +522,15 @@ export default {
       } catch (error) {
         console.error(error)
       }
+
+      for (const key in musicDataList) {
+        db.collection('musicData')
+          .doc(key)
+          .set(musicDataList[key], { merge: true })
+          .catch(e => {
+            console.error(e)
+          })
+      }
     },
   },
 }
