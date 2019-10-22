@@ -33,6 +33,7 @@ export default {
       isDisable: false,
       twitterLogin: false,
       tweetStatus: '',
+      versionMusicList: {},
     }
   },
   props: {
@@ -56,6 +57,8 @@ export default {
   },
   methods: {
     async getData() {
+      await this.getFirstVersion()
+      return
       this.error = false
       this.isDisable = true
       this.message = 'データ取得準備中...'
@@ -227,7 +230,6 @@ export default {
       await this.getRecordData()
       if (updateScoreData.length <= 0) {
         this.message = '更新データはありませんでした'
-        return
       }
       this.message = 'データ保存中...'
 
@@ -544,6 +546,52 @@ export default {
             console.error(e)
           })
       }
+    },
+    async getFirstVersion() {
+      const versionMusicList = {}
+      const sleep = msec => new Promise(resolve => setTimeout(resolve, msec))
+      for (let i = 0; i <= 13; i++) {
+        console.log(i)
+
+        const { data } = await Axios.get(`https://maimaidx.jp/maimai-mobile/record/musicVersion/search/?version=${i}&diff=3`)
+        const tmpEl = document.createElement('div')
+        tmpEl.innerHTML = data
+
+        const version = tmpEl.getElementsByClassName('screw_block m_15 f_15')[0].innerText.replace(' ', '_')
+        const musicElList = tmpEl.getElementsByClassName('music_master_score_back pointer w_450 m_15 p_3 f_0')
+        for (let j = 0; j < musicElList.length; j++) {
+          let title = musicElList[j].getElementsByClassName('music_name_block t_l f_13 break')[0].innerText
+          if (versionMusicList[title] != null) {
+            while (versionMusicList[title] != null) {
+              title += '_'
+            }
+            const idx = musicElList[j].getElementsByTagName('input')[0].value
+            const { data } = await Axios.get(`https://maimaidx.jp/maimai-mobile/record/musicDetail/?idx=${encodeURIComponent(idx)}`)
+            const tmpEl = document.createElement('div')
+            tmpEl.innerHTML = data
+            console.log(title)
+
+            const genre = tmpEl.getElementsByClassName('m_10 m_t_5 t_r f_12 blue')[0].innerText.trim()
+            console.log({ genre })
+
+            const type =
+              tmpEl
+                .getElementsByClassName('m_10 m_t_5 t_r f_12 blue')[0]
+                .getElementsByTagName('img')[0]
+                .src.indexOf('dx.png') >= 0
+                ? 'deluxe'
+                : 'standard'
+            console.log({ type })
+
+            versionMusicList[title] = { version, genre, type }
+            await sleep(500)
+          } else {
+            versionMusicList[title] = { version }
+          }
+        }
+      }
+      console.log(versionMusicList)
+      this.versionMusicList = versionMusicList
     },
   },
 }
