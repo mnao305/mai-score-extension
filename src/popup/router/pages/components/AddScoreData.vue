@@ -57,11 +57,10 @@ export default {
   },
   methods: {
     async getData() {
-      await this.getFirstVersion()
-      return
       this.error = false
       this.isDisable = true
       this.message = 'データ取得準備中...'
+      await this.getFirstVersion()
       const date = Date.now()
       const difficultyLevel = ['Basic', 'Advanced', 'Expert', 'Master', 'ReMaster']
       let scoreData = []
@@ -193,6 +192,23 @@ export default {
               updateFlg = true
             }
 
+            const escapeTitle = tmp[1].replace(/[\\^$.*+?()[\]{}|]/g, '\\$&')
+            const reg = new RegExp(`^${escapeTitle}_*$`)
+            const keyList = Object.keys(this.versionMusicList).filter(v => reg.test(v))
+
+            let version
+            if (keyList.length === 1) {
+              version = this.versionMusicList[tmp[1]].version
+            } else {
+              version = this.versionMusicList[tmp[1]].version
+              for (let index = 0; index < keyList.length; index++) {
+                if (this.versionMusicList[keyList[index]].type === type && this.versionMusicList[keyList[index]].genre === genre) {
+                  version = this.versionMusicList[keyList[index]].version
+                  break
+                }
+              }
+            }
+
             const achievements = tmp[2] ? oldAchievement : null
             const dxScores = tmp[3] ? oldDxScore : null
             scoreData[difficultyLevel[i]][musicHash] = {
@@ -208,13 +224,14 @@ export default {
               sync: sync,
               date: musicUpdateDate,
               musicID: classList[j].getElementsByTagName('input')[0].value,
+              version: version,
             }
             if (updateFlg) {
               updateScoreData.push(scoreData[difficultyLevel[i]][musicHash])
             }
           }
         } catch (error) {
-          console.error(error.data)
+          console.error(error)
           if (error.response && error.response.data && error.response.data.match(/メンテナンス中/)) {
             this.message = 'maimaiでらっくすNETはメンテナンス中です。メンテナンス終了後に再度お試しください。'
             this.error = true
@@ -551,8 +568,6 @@ export default {
       const versionMusicList = {}
       const sleep = msec => new Promise(resolve => setTimeout(resolve, msec))
       for (let i = 0; i <= 13; i++) {
-        console.log(i)
-
         const { data } = await Axios.get(`https://maimaidx.jp/maimai-mobile/record/musicVersion/search/?version=${i}&diff=3`)
         const tmpEl = document.createElement('div')
         tmpEl.innerHTML = data
@@ -569,11 +584,7 @@ export default {
             const { data } = await Axios.get(`https://maimaidx.jp/maimai-mobile/record/musicDetail/?idx=${encodeURIComponent(idx)}`)
             const tmpEl = document.createElement('div')
             tmpEl.innerHTML = data
-            console.log(title)
-
             const genre = tmpEl.getElementsByClassName('m_10 m_t_5 t_r f_12 blue')[0].innerText.trim()
-            console.log({ genre })
-
             const type =
               tmpEl
                 .getElementsByClassName('m_10 m_t_5 t_r f_12 blue')[0]
@@ -581,8 +592,6 @@ export default {
                 .src.indexOf('dx.png') >= 0
                 ? 'deluxe'
                 : 'standard'
-            console.log({ type })
-
             versionMusicList[title] = { version, genre, type }
             await sleep(500)
           } else {
