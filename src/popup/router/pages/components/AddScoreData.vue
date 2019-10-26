@@ -192,18 +192,18 @@ export default {
               updateFlg = true
             }
 
-            const escapeTitle = tmp[1].replace(/[\\^$.*+?()[\]{}|]/g, '\\$&')
-            const reg = new RegExp(`^${escapeTitle}_*$`)
+            const escapeTitle = encodeURIComponent(tmp[1]).replace(/[\\^$.*+?()[\]{}|]/g, '\\$&')
+            const reg = new RegExp(`^${escapeTitle}_${type}_*$`)
             const keyList = Object.keys(this.versionMusicList).filter(v => reg.test(v))
 
             let version
             if (keyList.length === 1) {
-              version = this.versionMusicList[tmp[1]].version
+              version = this.versionMusicList[`${encodeURIComponent(tmp[1])}_${type}`].version
             } else {
-              version = this.versionMusicList[tmp[1]].version
+              version = this.versionMusicList[`${encodeURIComponent(tmp[1])}_${type}`].version
               for (let index = 0; index < keyList.length; index++) {
-                if (this.versionMusicList[keyList[index]].type === type && this.versionMusicList[keyList[index]].genre === genre) {
-                  version = this.versionMusicList[keyList[index]].version
+                if (this.versionMusicList[`${keyList[index]}_${type}`].type === type && this.versionMusicList[`${keyList[index]}_${type}`].genre === genre) {
+                  version = this.versionMusicList[`${keyList[index]}_${type}`].version
                   break
                 }
               }
@@ -576,6 +576,7 @@ export default {
         const musicElList = tmpEl.getElementsByClassName('music_master_score_back pointer w_450 m_15 p_3 f_0')
         for (let j = 0; j < musicElList.length; j++) {
           let title = musicElList[j].getElementsByClassName('music_name_block t_l f_13 break')[0].innerText
+          const type = tmpEl.getElementsByClassName('music_kind_icon f_r')[0].src.indexOf('dx.png') >= 0 ? 'deluxe' : 'standard'
           if (versionMusicList[title] != null) {
             while (versionMusicList[title] != null) {
               title += '_'
@@ -585,22 +586,21 @@ export default {
             const tmpEl = document.createElement('div')
             tmpEl.innerHTML = data
             const genre = tmpEl.getElementsByClassName('m_10 m_t_5 t_r f_12 blue')[0].innerText.trim()
-            const type =
-              tmpEl
-                .getElementsByClassName('m_10 m_t_5 t_r f_12 blue')[0]
-                .getElementsByTagName('img')[0]
-                .src.indexOf('dx.png') >= 0
-                ? 'deluxe'
-                : 'standard'
-            versionMusicList[title] = { version, genre, type }
+            versionMusicList[`${encodeURIComponent(title)}_${type}`] = { title, version, genre, type }
             await sleep(500)
           } else {
-            versionMusicList[title] = { version }
+            versionMusicList[`${encodeURIComponent(title)}_${type}`] = { title, version }
           }
         }
       }
       console.log(versionMusicList)
       this.versionMusicList = versionMusicList
+      db.collection('firstVersion')
+        .doc('Master')
+        .set(versionMusicList)
+        .catch(e => {
+          console.error(e)
+        })
     },
   },
 }
