@@ -192,22 +192,9 @@ export default {
               updateFlg = true
             }
 
-            const escapeTitle = encodeURIComponent(tmp[1]).replace(/[\\^$.*+?()[\]{}|]/g, '\\$&')
-            const reg = new RegExp(`^${escapeTitle}_${type}_*$`)
-            const keyList = Object.keys(this.versionMusicList).filter(v => reg.test(v))
+            const tmpList = this.versionMusicList.filter(v => v.title === tmp[1] && v.type === type && v.genre === genre)
 
-            let version
-            if (keyList.length === 1) {
-              version = this.versionMusicList[`${encodeURIComponent(tmp[1])}_${type}`].version
-            } else {
-              version = this.versionMusicList[`${encodeURIComponent(tmp[1])}_${type}`].version
-              for (let index = 0; index < keyList.length; index++) {
-                if (this.versionMusicList[`${keyList[index]}_${type}`].type === type && this.versionMusicList[`${keyList[index]}_${type}`].genre === genre) {
-                  version = this.versionMusicList[`${keyList[index]}_${type}`].version
-                  break
-                }
-              }
-            }
+            const version = tmpList[0].version
 
             const achievements = tmp[2] ? oldAchievement : null
             const dxScores = tmp[3] ? oldDxScore : null
@@ -463,14 +450,14 @@ export default {
       this.tweetStatus = str
     },
     async getRecordData() {
-      let gotOldMusicData = { Basic: {}, Advanced: {}, Expert: {}, Master: {}, ReMaster: {} }
-      for (const key in gotOldMusicData) {
+      let gotOldChartData = { Basic: {}, Advanced: {}, Expert: {}, Master: {}, ReMaster: {} }
+      for (const key in gotOldChartData) {
         const docs = await db
-          .collection('musicData')
+          .collection('chartData')
           .doc(key)
           .get()
         if (docs && docs.exists) {
-          gotOldMusicData[key] = docs.data()
+          gotOldChartData[key] = docs.data()
         }
       }
 
@@ -494,7 +481,7 @@ export default {
         const idx = el.getElementsByTagName('input')[0].value
         const type = el.getElementsByClassName('playlog_music_kind_icon')[0].src.indexOf('standard.png') >= 0 ? 'standard' : 'deluxe'
         const payload = { musicID, title, difficultyLevel, idx, type }
-        if (gotOldMusicData[difficultyLevel][`${musicID}_${type}`] == null) {
+        if (gotOldChartData[difficultyLevel][`${musicID}_${type}`] == null) {
           recordList.push(payload)
         }
       })
@@ -508,7 +495,7 @@ export default {
       })
       console.log(deduplicationRecordList)
 
-      let musicDataList = { Basic: {}, Advanced: {}, Expert: {}, Master: {}, ReMaster: {} }
+      let chartDataList = { Basic: {}, Advanced: {}, Expert: {}, Master: {}, ReMaster: {} }
 
       try {
         const sleep = msec => new Promise(resolve => setTimeout(resolve, msec))
@@ -548,56 +535,70 @@ export default {
           }
 
           deduplicationRecordList[i].notes = { tap: sum(notes[0]), hold: sum(notes[1]), slide: sum(notes[2]), touch: sum(notes[3]), break: sum(notes[4]) }
-          musicDataList[deduplicationRecordList[i].difficultyLevel][`${deduplicationRecordList[i].musicID}_${deduplicationRecordList[i].type}`] = deduplicationRecordList[i]
+          chartDataList[deduplicationRecordList[i].difficultyLevel][`${deduplicationRecordList[i].musicID}_${deduplicationRecordList[i].type}`] = deduplicationRecordList[i]
           if (i % 10 === 0) await sleep(1000)
         }
       } catch (error) {
         console.error(error)
       }
 
-      for (const key in musicDataList) {
-        db.collection('musicData')
+      for (const key in chartDataList) {
+        db.collection('chartData')
           .doc(key)
-          .set(musicDataList[key], { merge: true })
+          .set(chartDataList[key], { merge: true })
           .catch(e => {
             console.error(e)
           })
       }
     },
     async getFirstVersion() {
-      const versionMusicList = {}
+      let versionMusicList = []
+      const docs = await db
+        .collection('musicData')
+        .doc('Master')
+        .get()
+      if (docs && docs.exists) {
+        let tmp = docs.data()
+        versionMusicList = tmp.data || []
+      }
+      const domparser = new DOMParser()
+      const { data } = await Axios.get('https://maimaidx.jp/maimai-mobile/record/musicVersion/')
+      const doc = domparser.parseFromString(data, 'text/html')
+      const optionCnt = doc.getElementsByClassName('w_300 m_10')[0].childElementCount
       const sleep = msec => new Promise(resolve => setTimeout(resolve, msec))
-      for (let i = 0; i <= 13; i++) {
+      for (let i = 0; i < optionCnt; i++) {
         const { data } = await Axios.get(`https://maimaidx.jp/maimai-mobile/record/musicVersion/search/?version=${i}&diff=3`)
-        const tmpEl = document.createElement('div')
-        tmpEl.innerHTML = data
+        const tmpEl = domparser.parseFromString(data, 'text/html')
 
         const version = tmpEl.getElementsByClassName('screw_block m_15 f_15')[0].innerText.replace(' ', '_')
         const musicElList = tmpEl.getElementsByClassName('music_master_score_back pointer w_450 m_15 p_3 f_0')
         for (let j = 0; j < musicElList.length; j++) {
           let title = musicElList[j].getElementsByClassName('music_name_block t_l f_13 break')[0].innerText
           const type = tmpEl.getElementsByClassName('music_kind_icon f_r')[0].src.indexOf('dx.png') >= 0 ? 'deluxe' : 'standard'
-          if (versionMusicList[title] != null) {
-            while (versionMusicList[title] != null) {
-              title += '_'
-            }
+          if (versionMusicList.find(v => v.title === title && v.type === type && v.version === version) == null) {
             const idx = musicElList[j].getElementsByTagName('input')[0].value
             const { data } = await Axios.get(`https://maimaidx.jp/maimai-mobile/record/musicDetail/?idx=${encodeURIComponent(idx)}`)
-            const tmpEl = document.createElement('div')
-            tmpEl.innerHTML = data
+            const tmpEl = domparser.parseFromString(data, 'text/html')
+
+            const splitedMusicImgUrl = tmpEl.getElementsByClassName('w_180 m_5 f_l')[0].src.split('/')
+            const songID = splitedMusicImgUrl[splitedMusicImgUrl.length - 1].split('.')[0]
             const genre = tmpEl.getElementsByClassName('m_10 m_t_5 t_r f_12 blue')[0].innerText.trim()
-            versionMusicList[`${encodeURIComponent(title)}_${type}`] = { title, version, genre, type }
+
+            if (versionMusicList.find(v => v.songID === songID && v.type === type && v.genre === genre) != null) {
+              await sleep(500)
+              continue
+            }
+            const artist = tmpEl.getElementsByClassName('m_5 f_12 break')[0].innerText.trim()
+            versionMusicList.push({ title, version, genre, type, songID, artist })
             await sleep(500)
-          } else {
-            versionMusicList[`${encodeURIComponent(title)}_${type}`] = { title, version }
           }
         }
       }
       console.log(versionMusicList)
       this.versionMusicList = versionMusicList
-      db.collection('firstVersion')
+      db.collection('musicData')
         .doc('Master')
-        .set(versionMusicList)
+        .set({ data: versionMusicList }, { merge: true })
         .catch(e => {
           console.error(e)
         })
