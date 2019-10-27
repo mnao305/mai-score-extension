@@ -566,7 +566,8 @@ export default {
       const doc = domparser.parseFromString(data, 'text/html')
       const optionCnt = doc.getElementsByClassName('w_300 m_10')[0].childElementCount
       const sleep = msec => new Promise(resolve => setTimeout(resolve, msec))
-      for (let i = 0; i < optionCnt; i++) {
+      // maimaiでらっくすのパラメータは13
+      for (let i = 13; i < optionCnt; i++) {
         const { data } = await Axios.get(`https://maimaidx.jp/maimai-mobile/record/musicVersion/search/?version=${i}&diff=3`)
         const tmpEl = domparser.parseFromString(data, 'text/html')
 
