@@ -86,8 +86,8 @@ export default {
             this.isDisable = false
             return
           }
-          const tmpEl = document.createElement('div')
-          tmpEl.innerHTML = data
+          const domparser = new DOMParser()
+          const tmpEl = domparser.parseFromString(data, 'text/html')
           const classList = tmpEl.getElementsByClassName('main_wrapper')[0].children
 
           let genre = ''
@@ -263,8 +263,8 @@ export default {
       this.message = 'ユーザデータを読み込み中...'
       try {
         const { data } = await Axios.get('https://maimaidx.jp/maimai-mobile/playerData/')
-        const element = document.createElement('div')
-        element.innerHTML = data
+        const domparser = new DOMParser()
+        const element = domparser.parseFromString(data, 'text/html')
         if (data.match(/ログインしてください/)) {
           this.message = 'maimaiでらっくすNETにログインしていません。ログインしてから再度お試しください。'
           this.error = true
@@ -424,8 +424,8 @@ export default {
     },
     async saveMusicIcon(musicID) {
       const { data } = await Axios.get(`https://maimaidx.jp/maimai-mobile/record/musicDetail/?idx=${encodeURIComponent(musicID)}`)
-      const tmpEl = document.createElement('div')
-      tmpEl.innerHTML = data
+      const domparser = new DOMParser()
+      const tmpEl = domparser.parseFromString(data, 'text/html')
 
       const title = tmpEl.getElementsByClassName('m_5 f_15 break')[0].innerText
       const musicImgUrl = tmpEl.getElementsByClassName('w_180 m_5 f_l')[0].src
@@ -462,8 +462,8 @@ export default {
       }
 
       const { data } = await Axios.get('https://maimaidx.jp/maimai-mobile/record/')
-      const tmpEl = document.createElement('div')
-      tmpEl.innerHTML = data
+      const domparser = new DOMParser()
+      const tmpEl = domparser.parseFromString(data, 'text/html')
       const classList = tmpEl.getElementsByClassName('p_10 t_l f_0 v_b')
       console.log(classList)
       console.log(classList[0])
@@ -508,8 +508,8 @@ export default {
           const idx = deduplicationRecordList[i].idx
           delete deduplicationRecordList[i].idx
           const { data } = await Axios.get(`https://maimaidx.jp/maimai-mobile/record/playlogDetail/?idx=${idx}`)
-          const tmpEl = document.createElement('div')
-          tmpEl.innerHTML = data
+          const domparser = new DOMParser()
+          const tmpEl = domparser.parseFromString(data, 'text/html')
           deduplicationRecordList[i].maxCombo = Number(tmpEl.getElementsByClassName('f_r f_14 white')[0].innerText.split('/')[1])
 
           const rawNotes = tmpEl
