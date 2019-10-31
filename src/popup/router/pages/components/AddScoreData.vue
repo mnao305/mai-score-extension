@@ -234,6 +234,7 @@ export default {
       await this.getRecordData()
       if (updateScoreData.length <= 0) {
         this.message = '更新データはありませんでした'
+        return
       }
       this.message = 'データ保存中...'
 
