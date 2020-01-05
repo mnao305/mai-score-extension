@@ -371,7 +371,7 @@ export default {
           const musicIconUrl = await firebase
             .storage()
             .ref()
-            .child(`musicIcon/${v.title}.png`)
+            .child(`musicIcon/${encodeURIComponent(v.title)}.png`)
             .getDownloadURL()
 
           await loadImage(musicIconUrl)
@@ -444,7 +444,7 @@ export default {
         const storageRef = firebase
           .storage()
           .ref('musicIcon/')
-          .child(`${title}.png`)
+          .child(`${encodeURIComponent(title)}.png`)
         const data = await storageRef.put(musicIcon.data, {
           contentType: 'image/png',
         })
