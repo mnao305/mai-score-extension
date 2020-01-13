@@ -237,7 +237,6 @@ export default {
           continue
         }
       }
-      console.log(scoreData)
       await this.getFetchUserData(date)
       this.message = 'プレイ履歴取得中...'
       await this.getRecordData()
@@ -346,7 +345,6 @@ export default {
       this.tweetURL = `https://twitter.com/intent/tweet?text=スコア更新しました！&hashtags=舞スコア&url=https://mai-score.com/user/${userData.displayName}`
     },
     async createScoreImg(updateScoreData) {
-      console.log(updateScoreData)
       updateScoreData.reverse()
 
       if (updateScoreData.length >= 20) {
@@ -366,7 +364,6 @@ export default {
 
       let i = 0
       for (const v of updateScoreData) {
-        console.log(v)
         try {
           const musicIconUrl = await firebase
             .storage()
@@ -414,8 +411,7 @@ export default {
           .storage()
           .ref(`userData/${this.uid}/`)
           .child('updateScore.jpg')
-        const data = await storageRef.putString(imgUrl, 'data_url')
-        console.log(data)
+        await storageRef.putString(imgUrl, 'data_url')
       } catch (error) {
         console.error(error)
       }
@@ -445,18 +441,15 @@ export default {
           .storage()
           .ref('musicIcon/')
           .child(`${encodeURIComponent(title)}.png`)
-        const data = await storageRef.put(musicIcon.data, {
+        await storageRef.put(musicIcon.data, {
           contentType: 'image/png',
         })
-        console.log(data)
       } catch (error) {
         console.error(error)
       }
       return musicImgUrl
     },
     tweetStatusUpdate(str) {
-      console.log(str)
-
       this.tweetStatus = str
     },
     async getRecordData() {
@@ -475,8 +468,6 @@ export default {
       const domparser = new DOMParser()
       const tmpEl = domparser.parseFromString(data, 'text/html')
       const classList = tmpEl.getElementsByClassName('p_10 t_l f_0 v_b')
-      console.log(classList)
-      console.log(classList[0])
       let recordList = []
 
       classList.forEach(el => {
@@ -503,7 +494,6 @@ export default {
           return e
         }
       })
-      console.log(deduplicationRecordList)
 
       let chartDataList = { Basic: {}, Advanced: {}, Expert: {}, Master: {}, ReMaster: {} }
 
@@ -605,7 +595,6 @@ export default {
           }
         }
       }
-      console.log(versionMusicList)
       this.versionMusicList = versionMusicList
       db.collection('musicData')
         .doc('Master')
