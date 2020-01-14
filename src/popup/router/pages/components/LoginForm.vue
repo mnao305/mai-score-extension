@@ -21,8 +21,6 @@ export default {
   },
   methods: {
     async twitterLogin() {
-      console.log('Login!!!!')
-
       try {
         const data = await auth.twitterLogin()
         const dbData = await db

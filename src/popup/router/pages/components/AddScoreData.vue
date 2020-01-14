@@ -4,9 +4,10 @@
     <p>舞スコア データ取得ツール</p>
     <button :disabled="isDisable" class="addDataBtn" :class="{ disableBtn: isDisable }" @click="getData">データ取得</button>
     <p v-if="message" :class="{ error: error }">{{ message }}</p>
+    <p v-if="publicData && twitterLogin && !imageGenerationSuccessFlag">スコア更新画像の生成に失敗しました</p>
     <div v-if="message === 'データ保存完了！'" class="tweetLink">
       <p v-if="publicData"><a :href="tweetURL" target="_blank">スコア更新ツイート</a></p>
-      <p v-if="publicData && twitterLogin"><TweetsWithImages @tweetStatusUpdate="tweetStatusUpdate" /></p>
+      <p v-if="publicData && twitterLogin && imageGenerationSuccessFlag"><TweetsWithImages @tweetStatusUpdate="tweetStatusUpdate" /></p>
     </div>
     <p v-if="tweetStatus">{{ tweetStatus }}</p>
   </div>
@@ -34,6 +35,8 @@ export default {
       twitterLogin: false,
       tweetStatus: '',
       versionMusicList: {},
+      isDXScoreNotOnTheTweetImg: false,
+      imageGenerationSuccessFlag: true,
     }
   },
   props: {
@@ -54,6 +57,7 @@ export default {
     this.twitterLogin = data.providerData.some(v => {
       return v.providerId === 'twitter.com'
     })
+    this.isDXScoreNotOnTheTweetImg = data.isDXScoreNotOnTheTweetImg != null ? data.isDXScoreNotOnTheTweetImg : false
   },
   methods: {
     async getData() {
@@ -237,7 +241,6 @@ export default {
           continue
         }
       }
-      console.log(scoreData)
       await this.getFetchUserData(date)
       this.message = 'プレイ履歴取得中...'
       await this.getRecordData()
@@ -346,11 +349,15 @@ export default {
       this.tweetURL = `https://twitter.com/intent/tweet?text=スコア更新しました！&hashtags=舞スコア&url=https://mai-score.com/user/${userData.displayName}`
     },
     async createScoreImg(updateScoreData) {
-      console.log(updateScoreData)
       updateScoreData.reverse()
-
+      if (this.isDXScoreNotOnTheTweetImg) {
+        updateScoreData = this.excludeDXScoreOnlyUpdates(updateScoreData)
+      }
       if (updateScoreData.length >= 20) {
         updateScoreData = updateScoreData.slice(0, 20)
+      } else if (updateScoreData.length === 0) {
+        this.imageGenerationSuccessFlag = false
+        return
       }
 
       let canvas = document.createElement('canvas')
@@ -366,7 +373,6 @@ export default {
 
       let i = 0
       for (const v of updateScoreData) {
-        console.log(v)
         try {
           const musicIconUrl = await firebase
             .storage()
@@ -414,10 +420,10 @@ export default {
           .storage()
           .ref(`userData/${this.uid}/`)
           .child('updateScore.jpg')
-        const data = await storageRef.putString(imgUrl, 'data_url')
-        console.log(data)
+        await storageRef.putString(imgUrl, 'data_url')
       } catch (error) {
         console.error(error)
+        this.imageGenerationSuccessFlag = false
       }
       function loadImage(src) {
         return new Promise((resolve, reject) => {
@@ -432,6 +438,15 @@ export default {
         })
       }
     },
+    excludeDXScoreOnlyUpdates(scoreData) {
+      let excludedScoreData = []
+      for (let i = 0; i < scoreData.length; i++) {
+        if (scoreData[i].achievements.length < 2 || scoreData[i].achievements.slice(-1)[0].achievement - scoreData[i].achievements.slice(-2)[0].achievement) {
+          excludedScoreData.push(scoreData[i])
+        }
+      }
+      return excludedScoreData
+    },
     async saveMusicIcon(musicID) {
       const { data } = await Axios.get(`https://maimaidx.jp/maimai-mobile/record/musicDetail/?idx=${encodeURIComponent(musicID)}`)
       const domparser = new DOMParser()
@@ -445,18 +460,15 @@ export default {
           .storage()
           .ref('musicIcon/')
           .child(`${encodeURIComponent(title)}.png`)
-        const data = await storageRef.put(musicIcon.data, {
+        await storageRef.put(musicIcon.data, {
           contentType: 'image/png',
         })
-        console.log(data)
       } catch (error) {
         console.error(error)
       }
       return musicImgUrl
     },
     tweetStatusUpdate(str) {
-      console.log(str)
-
       this.tweetStatus = str
     },
     async getRecordData() {
@@ -475,8 +487,6 @@ export default {
       const domparser = new DOMParser()
       const tmpEl = domparser.parseFromString(data, 'text/html')
       const classList = tmpEl.getElementsByClassName('p_10 t_l f_0 v_b')
-      console.log(classList)
-      console.log(classList[0])
       let recordList = []
 
       classList.forEach(el => {
@@ -503,7 +513,6 @@ export default {
           return e
         }
       })
-      console.log(deduplicationRecordList)
 
       let chartDataList = { Basic: {}, Advanced: {}, Expert: {}, Master: {}, ReMaster: {} }
 
@@ -605,7 +614,6 @@ export default {
           }
         }
       }
-      console.log(versionMusicList)
       this.versionMusicList = versionMusicList
       db.collection('musicData')
         .doc('Master')
