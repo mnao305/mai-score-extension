@@ -226,7 +226,7 @@ export default {
             }
 
             const achievements = tmp[2] ? oldAchievement : null
-            const dxScores = dxScore ? oldDxScore : null
+            const dxScores = achievements ? oldDxScore : null
             scoreData[difficultyLevel[i]][`${songID}_${type}_${difficultyLevel[i]}`] = {
               songID: songID,
               title: tmp[1],
