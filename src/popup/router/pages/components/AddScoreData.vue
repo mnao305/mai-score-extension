@@ -214,10 +214,10 @@ export default {
                     .replace(',', '')
                 )
               : null
-            if (
-              (oldAchievement.length >= 1 && oldAchievement[oldAchievement.length - 1].achievement !== Number(tmp[2].replace('%', ''))) ||
+            if (tmp[2] &&
+              ((oldAchievement.length >= 1 && oldAchievement[oldAchievement.length - 1].achievement !== Number(tmp[2].replace('%', ''))) ||
               (oldAchievement.length === 0 && tmp[2]) ||
-              ((oldDxScore.length >= 1 && oldDxScore[oldDxScore.length - 1].dxScore !== dxScore) || (oldDxScore.length === 0 && dxScore))
+              ((oldDxScore.length >= 1 && oldDxScore[oldDxScore.length - 1].dxScore !== dxScore) || (oldDxScore.length === 0 && dxScore)))
             ) {
               oldAchievement.push({ achievement: Number(tmp[2].replace('%', '')), date: date })
               oldDxScore.push({ dxScore: dxScore, date: date })
@@ -273,6 +273,9 @@ export default {
             .set(scoreData[difficultyLevel[i]])
             .catch(e => {
               console.error(e)
+              this.message = 'データの保存に失敗しました'
+              this.error = true
+              this.isDisable = false
             })
         }
         await db
@@ -310,7 +313,7 @@ export default {
           this.isDisable = false
         }
         const gotRating = element.getElementsByClassName('rating_block f_11')[0].innerText
-        const gotMaxRating = Number(element.getElementsByClassName('p_r_5 f_11')[0].innerText.split('：')[1])
+        // const gotMaxRating = Number(element.getElementsByClassName('p_r_5 f_11')[0].innerText.split('：')[1])
         const gotPlayCount = Number(
           element
             .getElementsByClassName('m_5 m_t_10 t_r f_12')[0]
@@ -345,7 +348,7 @@ export default {
           .set(
             {
               ratings: ratings,
-              maxRating: gotMaxRating,
+              // maxRating: gotMaxRating,
               playCount: gotPlayCount,
               userName: gotUserName,
             },
