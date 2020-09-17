@@ -214,10 +214,11 @@ export default {
                     .replace(',', '')
                 )
               : null
-            if (tmp[2] &&
+            if (
+              tmp[2] &&
               ((oldAchievement.length >= 1 && oldAchievement[oldAchievement.length - 1].achievement !== Number(tmp[2].replace('%', ''))) ||
-              (oldAchievement.length === 0 && tmp[2]) ||
-              ((oldDxScore.length >= 1 && oldDxScore[oldDxScore.length - 1].dxScore !== dxScore) || (oldDxScore.length === 0 && dxScore)))
+                (oldAchievement.length === 0 && tmp[2]) ||
+                ((oldDxScore.length >= 1 && oldDxScore[oldDxScore.length - 1].dxScore !== dxScore) || (oldDxScore.length === 0 && dxScore)))
             ) {
               oldAchievement.push({ achievement: Number(tmp[2].replace('%', '')), date: date })
               oldDxScore.push({ dxScore: dxScore, date: date })
