@@ -482,7 +482,6 @@ export default {
       const domparser = new DOMParser()
       const tmpEl = domparser.parseFromString(data, 'text/html')
 
-      const title = tmpEl.getElementsByClassName('m_5 f_15 break')[0].innerText
       const musicImgUrl = tmpEl.getElementsByClassName('w_180 m_5 f_l')[0].src
       const musicIcon = await Axios.get(musicImgUrl, { responseType: 'arraybuffer' })
       try {
