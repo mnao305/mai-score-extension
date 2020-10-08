@@ -407,7 +407,7 @@ export default {
           const musicIconUrl = await firebase
             .storage()
             .ref()
-            .child(`musicIcon/${encodeURIComponent(v.title)}.png`)
+            .child(`musicIcon/${encodeURIComponent(v.musicID)}.png`)
             .getDownloadURL()
 
           await loadImage(musicIconUrl)
@@ -482,14 +482,13 @@ export default {
       const domparser = new DOMParser()
       const tmpEl = domparser.parseFromString(data, 'text/html')
 
-      const title = tmpEl.getElementsByClassName('m_5 f_15 break')[0].innerText
       const musicImgUrl = tmpEl.getElementsByClassName('w_180 m_5 f_l')[0].src
       const musicIcon = await Axios.get(musicImgUrl, { responseType: 'arraybuffer' })
       try {
         const storageRef = firebase
           .storage()
           .ref('musicIcon/')
-          .child(`${encodeURIComponent(title)}.png`)
+          .child(`${encodeURIComponent(musicID)}.png`)
         await storageRef.put(musicIcon.data, {
           contentType: 'image/png',
         })
