@@ -407,13 +407,13 @@ export default {
           const musicIconUrl = await firebase
             .storage()
             .ref()
-            .child(`musicIcon/${encodeURIComponent(v.musicID)}.png`)
+            .child(`musicIcon/${encodeURIComponent(v.songID)}.png`)
             .getDownloadURL()
 
           await loadImage(musicIconUrl)
         } catch (error) {
           if (error.code === 'storage/object-not-found') {
-            const musicIconUrl = await this.saveMusicIcon(v.musicID)
+            const musicIconUrl = await this.saveMusicIcon(v.musicID, v.songID)
             await loadImage(musicIconUrl)
           } else {
             console.error(error)
@@ -477,18 +477,14 @@ export default {
       }
       return excludedScoreData
     },
-    async saveMusicIcon(musicID) {
-      const { data } = await Axios.get(`https://maimaidx.jp/maimai-mobile/record/musicDetail/?idx=${encodeURIComponent(musicID)}`)
-      const domparser = new DOMParser()
-      const tmpEl = domparser.parseFromString(data, 'text/html')
-
-      const musicImgUrl = tmpEl.getElementsByClassName('w_180 m_5 f_l')[0].src
+    async saveMusicIcon(musicID, songID) {
+      const musicImgUrl = `https://maimaidx.jp/maimai-mobile/img/Music/${songID}.png`
       const musicIcon = await Axios.get(musicImgUrl, { responseType: 'arraybuffer' })
       try {
         const storageRef = firebase
           .storage()
           .ref('musicIcon/')
-          .child(`${encodeURIComponent(musicID)}.png`)
+          .child(`${encodeURIComponent(songID)}.png`)
         await storageRef.put(musicIcon.data, {
           contentType: 'image/png',
         })
