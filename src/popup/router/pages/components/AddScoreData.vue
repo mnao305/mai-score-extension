@@ -619,7 +619,7 @@ export default {
         const musicElList = tmpEl.getElementsByClassName('music_master_score_back pointer w_450 m_15 p_3 f_0')
         for (let j = 0; j < musicElList.length; j++) {
           let title = musicElList[j].getElementsByClassName('music_name_block t_l f_13 break')[0].innerText
-          const type = tmpEl.getElementsByClassName('music_kind_icon f_r')[0].src.indexOf('dx.png') >= 0 ? 'deluxe' : 'standard'
+          const type = musicElList[j].getElementsByClassName('music_kind_icon f_r')[0].src.indexOf('dx.png') >= 0 ? 'deluxe' : 'standard'
           if (versionMusicList.find(v => v.title === title && v.type === type && v.version === version) == null) {
             const idx = musicElList[j].getElementsByTagName('input')[0].value
             const { data } = await Axios.get(`https://maimaidx.jp/maimai-mobile/record/musicDetail/?idx=${encodeURIComponent(idx)}`)
